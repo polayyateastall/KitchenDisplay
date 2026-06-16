@@ -13,7 +13,7 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Poppins,sans-serif;
+    font-family:Arial, sans-serif;
 }
 
 body{
@@ -24,7 +24,23 @@ body{
 
 h1{
     text-align:center;
+    margin-bottom:15px;
+}
+
+.refresh-container{
+    text-align:center;
     margin-bottom:20px;
+}
+
+#refreshBtn{
+    background:#1971c2;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
 .card{
@@ -87,8 +103,6 @@ button{
     color:white;
 }
 
-/* Modal */
-
 #confirmModal{
     display:none;
     position:fixed;
@@ -131,6 +145,18 @@ button{
     color:white;
 }
 
+.empty{
+    text-align:center;
+    padding:30px;
+    color:#aaa;
+}
+
+.error{
+    text-align:center;
+    padding:20px;
+    color:red;
+}
+
 </style>
 
 </head>
@@ -139,60 +165,39 @@ button{
 
 <h1>☕ Pending Orders</h1>
 
-<div style="text-align:center;margin-bottom:20px;">
-
-    <button id="refreshBtn"
-        onclick="loadOrders()"
-        style="
-            background:#1971c2;
-            color:white;
-            border:none;
-            padding:12px 20px;
-            border-radius:8px;
-            font-size:16px;
-            font-weight:bold;
-            cursor:pointer;
-        ">
+<div class="refresh-container">
+    <button id="refreshBtn" onclick="manualRefresh()">
         🔄 Refresh Orders
     </button>
-
-</div></h1>
+</div>
 
 <div id="orders"></div>
 
-<!-- Confirmation Modal -->
-
 <div id="confirmModal">
 
-
+```
 <div class="modal-box">
 
     <h3>Confirm Order Served</h3>
 
     <p>
-        This order will be removed from the pending orders list.
+        This order will be removed from the pending list.
     </p>
 
-    <button
-        id="confirmYes"
-        class="confirm-btn">
+    <button id="confirmYes" class="confirm-btn">
         Yes, Mark Served
     </button>
 
-    <button
-        class="cancel-btn"
-        onclick="closeModal()">
+    <button class="cancel-btn" onclick="closeModal()">
         Cancel
     </button>
 
 </div>
-
+```
 
 </div>
 
 <script>
-
-/* REPLACE WITH YOUR APPS SCRIPT WEB APP URL */
 
 const api =
 "https://script.google.com/macros/s/AKfycbxV_4fW6Af9jdwBe_zX_2pdUAGsSdVzD2yyU1TIUCs39nRzDGdN8kVWvlGM9-PsbZVB/exec";
@@ -201,8 +206,7 @@ let selectedOrderId = "";
 
 function toggle(el){
 
-    const details =
-        el.nextElementSibling;
+    const details = el.nextElementSibling;
 
     details.style.display =
         details.style.display === "block"
@@ -214,30 +218,23 @@ async function loadOrders(){
 
     try{
 
-        const response =
-            await fetch(
-                api + "?action=orders"
-            );
+        const response = await fetch(
+            api +
+            "?action=orders&t=" +
+            Date.now()
+        );
 
-        const orders =
-            await response.json();
+        const orders = await response.json();
 
         const container =
             document.getElementById("orders");
 
         container.innerHTML = "";
 
-        if(orders.length === 0){
+        if(!orders || orders.length === 0){
 
-            container.innerHTML = `
-                <div style="
-                    text-align:center;
-                    padding:30px;
-                    color:#aaa;
-                ">
-                    No Pending Orders
-                </div>
-            `;
+            container.innerHTML =
+                '<div class="empty">No Pending Orders</div>';
 
             return;
         }
@@ -254,13 +251,9 @@ async function loadOrders(){
                 <div class="header"
                      onclick="toggle(this)">
 
-                    <span>
-                        ${order.orderId}
-                    </span>
+                    <span>${order.orderId}</span>
 
-                    <span>
-                        Table ${order.table}
-                    </span>
+                    <span>Table ${order.table}</span>
 
                 </div>
 
@@ -303,26 +296,17 @@ async function loadOrders(){
                     </div>
 
                 </div>
-
             `;
 
             container.appendChild(card);
-
         });
 
     }catch(err){
 
-        console.error("Error loading orders:", err);
+        console.error(err);
 
-        document.getElementById("orders").innerHTML = `
-            <div style="
-                text-align:center;
-                color:red;
-                padding:20px;
-            ">
-                Failed to load orders
-            </div>
-        `;
+        document.getElementById("orders").innerHTML =
+            '<div class="error">Failed to load orders</div>';
     }
 }
 
@@ -341,11 +325,9 @@ async function updateStatus(orderId,status){
             },
 
             body:JSON.stringify({
-
                 action:"updateStatus",
                 orderId:orderId,
                 status:status
-
             })
 
         });
@@ -354,10 +336,9 @@ async function updateStatus(orderId,status){
 
     }catch(err){
 
-        console.error("Status update failed:", err);
+        console.error(err);
     }
 }
-
 
 async function manualRefresh(){
 
@@ -365,17 +346,13 @@ async function manualRefresh(){
         document.getElementById("refreshBtn");
 
     btn.disabled = true;
-
     btn.innerText = "Refreshing...";
 
     await loadOrders();
 
-    btn.innerText =
-        "🔄 Refresh Orders";
-
+    btn.innerText = "🔄 Refresh Orders";
     btn.disabled = false;
 }
-
 
 function confirmServed(orderId){
 
@@ -402,16 +379,13 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             closeModal();
-
         });
 
+    loadOrders();
+
+    setInterval(loadOrders,3000);
+
 });
-
-loadOrders();
-
-/* Auto refresh every 3 seconds */
-
-setInterval(loadOrders,3000);
 
 </script>
 
