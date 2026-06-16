@@ -139,6 +139,25 @@ button{
 
 <h1>☕ Pending Orders</h1>
 
+<div style="text-align:center;margin-bottom:20px;">
+
+    <button id="refreshBtn"
+        onclick="loadOrders()"
+        style="
+            background:#1971c2;
+            color:white;
+            border:none;
+            padding:12px 20px;
+            border-radius:8px;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+        🔄 Refresh Orders
+    </button>
+
+</div></h1>
+
 <div id="orders"></div>
 
 <!-- Confirmation Modal -->
@@ -338,6 +357,25 @@ async function updateStatus(orderId,status){
         console.error("Status update failed:", err);
     }
 }
+
+
+async function manualRefresh(){
+
+    const btn =
+        document.getElementById("refreshBtn");
+
+    btn.disabled = true;
+
+    btn.innerText = "Refreshing...";
+
+    await loadOrders();
+
+    btn.innerText =
+        "🔄 Refresh Orders";
+
+    btn.disabled = false;
+}
+
 
 function confirmServed(orderId){
 
