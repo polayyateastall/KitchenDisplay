@@ -208,6 +208,21 @@ async function loadOrders(){
 
         container.innerHTML = "";
 
+        if(orders.length === 0){
+
+            container.innerHTML = `
+                <div style="
+                    text-align:center;
+                    padding:30px;
+                    color:#aaa;
+                ">
+                    No Pending Orders
+                </div>
+            `;
+
+            return;
+        }
+
         orders.forEach(order => {
 
             const card =
@@ -217,54 +232,58 @@ async function loadOrders(){
 
             card.innerHTML = `
 
-            <div class="header"
-                 onclick="toggle(this)">
+                <div class="header"
+                     onclick="toggle(this)">
 
-                <span>${order.orderId}</span>
+                    <span>
+                        ${order.orderId}
+                    </span>
 
-                <span>Table ${order.table}</span>
-
-            </div>
-
-            <div class="details">
-
-                <div class="status">
-                    Status: ${order.status}
-                </div>
-
-                ${order.tea ? `<div class="item">Tea × ${order.tea}</div>` : ""}
-                ${order.coffee ? `<div class="item">Coffee × ${order.coffee}</div>` : ""}
-                ${order.lemonTea ? `<div class="item">Lemon Tea × ${order.lemonTea}</div>` : ""}
-                ${order.greenTea ? `<div class="item">Green Tea × ${order.greenTea}</div>` : ""}
-                ${order.horlicks ? `<div class="item">Horlicks × ${order.horlicks}</div>` : ""}
-                ${order.boost ? `<div class="item">Boost × ${order.boost}</div>` : ""}
-                ${order.elaichiTea ? `<div class="item">Elaichi Tea × ${order.elaichiTea}</div>` : ""}
-                ${order.gingerTea ? `<div class="item">Ginger Tea × ${order.gingerTea}</div>` : ""}
-                ${order.sonthiCoffee ? `<div class="item">Sonthi Coffee × ${order.sonthiCoffee}</div>` : ""}
-
-                <div class="buttons">
-
-                    <button
-                        class="preparing"
-                        onclick="updateStatus('${order.orderId}','Preparing')">
-                        Preparing
-                    </button>
-
-                    <button
-                        class="ready"
-                        onclick="updateStatus('${order.orderId}','Ready')">
-                        Ready
-                    </button>
-
-                    <button
-                        class="served"
-                        onclick="confirmServed('${order.orderId}')">
-                        Served
-                    </button>
+                    <span>
+                        Table ${order.table}
+                    </span>
 
                 </div>
 
-            </div>
+                <div class="details">
+
+                    <div class="status">
+                        Status: ${order.status}
+                    </div>
+
+                    ${order.tea > 0 ? `<div class="item">Tea × ${order.tea}</div>` : ""}
+                    ${order.coffee > 0 ? `<div class="item">Coffee × ${order.coffee}</div>` : ""}
+                    ${order.lemonTea > 0 ? `<div class="item">Lemon Tea × ${order.lemonTea}</div>` : ""}
+                    ${order.greenTea > 0 ? `<div class="item">Green Tea × ${order.greenTea}</div>` : ""}
+                    ${order.horlicks > 0 ? `<div class="item">Horlicks × ${order.horlicks}</div>` : ""}
+                    ${order.boost > 0 ? `<div class="item">Boost × ${order.boost}</div>` : ""}
+                    ${order.elaichiTea > 0 ? `<div class="item">Elaichi Tea × ${order.elaichiTea}</div>` : ""}
+                    ${order.gingerTea > 0 ? `<div class="item">Ginger Tea × ${order.gingerTea}</div>` : ""}
+                    ${order.sonthiCoffee > 0 ? `<div class="item">Sonthi Coffee × ${order.sonthiCoffee}</div>` : ""}
+
+                    <div class="buttons">
+
+                        <button
+                            class="preparing"
+                            onclick="updateStatus('${order.orderId}','Preparing')">
+                            Preparing
+                        </button>
+
+                        <button
+                            class="ready"
+                            onclick="updateStatus('${order.orderId}','Ready')">
+                            Ready
+                        </button>
+
+                        <button
+                            class="served"
+                            onclick="confirmServed('${order.orderId}')">
+                            Served
+                        </button>
+
+                    </div>
+
+                </div>
 
             `;
 
@@ -275,6 +294,16 @@ async function loadOrders(){
     }catch(err){
 
         console.error("Error loading orders:", err);
+
+        document.getElementById("orders").innerHTML = `
+            <div style="
+                text-align:center;
+                color:red;
+                padding:20px;
+            ">
+                Failed to load orders
+            </div>
+        `;
     }
 }
 
