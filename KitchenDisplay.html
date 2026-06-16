@@ -1,40 +1,48 @@
 <!DOCTYPE html>
-<html>
+
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Polayya Kitchen Dashboard</title>
 
 <style>
 
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Poppins,sans-serif;
+}
+
 body{
     background:#111;
     color:white;
-    font-family:Poppins,sans-serif;
-    margin:0;
     padding:20px;
 }
 
 h1{
     text-align:center;
+    margin-bottom:20px;
 }
 
 .card{
-    background:#222;
-    border-radius:14px;
-    margin-bottom:12px;
-    overflow:hidden;
+    background:#1f1f1f;
     border:1px solid #333;
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:12px;
 }
 
 .header{
-    background:#333;
-    padding:16px;
-    cursor:pointer;
-    font-weight:bold;
+    background:#2b2b2b;
+    padding:15px;
     display:flex;
     justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+    font-weight:bold;
 }
 
 .details{
@@ -43,7 +51,12 @@ h1{
 }
 
 .item{
-    margin:6px 0;
+    margin:8px 0;
+}
+
+.status{
+    color:#aaa;
+    margin-bottom:12px;
 }
 
 .buttons{
@@ -52,11 +65,11 @@ h1{
 
 button{
     border:none;
-    padding:10px 14px;
     border-radius:8px;
-    margin-right:8px;
+    padding:10px 14px;
     cursor:pointer;
-    font-weight:bold;
+    font-weight:600;
+    margin-right:8px;
 }
 
 .preparing{
@@ -65,7 +78,7 @@ button{
 }
 
 .ready{
-    background:#228be6;
+    background:#1971c2;
     color:white;
 }
 
@@ -74,12 +87,52 @@ button{
     color:white;
 }
 
-.status{
-    color:#aaa;
-    font-size:14px;
+/* Modal */
+
+#confirmModal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.75);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-box{
+    background:#222;
+    padding:25px;
+    border-radius:12px;
+    width:90%;
+    max-width:360px;
+    text-align:center;
+    border:1px solid #444;
+}
+
+.modal-box h3{
+    margin-bottom:12px;
+}
+
+.modal-box p{
+    margin-bottom:20px;
+    color:#ccc;
+}
+
+.confirm-btn{
+    background:#2f9e44;
+    color:white;
+}
+
+.cancel-btn{
+    background:#666;
+    color:white;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -88,17 +141,64 @@ button{
 
 <div id="orders"></div>
 
+<!-- Confirmation Modal -->
+
+<div id="confirmModal">
+
+```
+<div class="modal-box">
+
+    <h3>Confirm Order Served</h3>
+
+    <p>
+        This order will be removed from the pending orders list.
+    </p>
+
+    <button
+        id="confirmYes"
+        class="confirm-btn">
+        Yes, Mark Served
+    </button>
+
+    <button
+        class="cancel-btn"
+        onclick="closeModal()">
+        Cancel
+    </button>
+
+</div>
+```
+
+</div>
+
 <script>
+
+/* REPLACE WITH YOUR APPS SCRIPT WEB APP URL */
 
 const api =
 "https://script.google.com/macros/s/AKfycbxV_4fW6Af9jdwBe_zX_2pdUAGsSdVzD2yyU1TIUCs39nRzDGdN8kVWvlGM9-PsbZVB/exec";
+
+let selectedOrderId = "";
+
+function toggle(el){
+
+    const details =
+        el.nextElementSibling;
+
+    details.style.display =
+        details.style.display === "block"
+        ? "none"
+        : "block";
+}
 
 async function loadOrders(){
 
     try{
 
         const response =
-            await fetch(api + "?action=orders");
+            await fetch(
+                api + "?action=orders"
+            );
 
         const orders =
             await response.json();
@@ -120,13 +220,9 @@ async function loadOrders(){
             <div class="header"
                  onclick="toggle(this)">
 
-                <span>
-                    ${order.orderId}
-                </span>
+                <span>${order.orderId}</span>
 
-                <span>
-                    Table ${order.table}
-                </span>
+                <span>Table ${order.table}</span>
 
             </div>
 
@@ -148,135 +244,109 @@ async function loadOrders(){
 
                 <div class="buttons">
 
-                    <button class="preparing"
-                      onclick="updateStatus('${order.orderId}','Preparing')">
-                      Preparing
+                    <button
+                        class="preparing"
+                        onclick="updateStatus('${order.orderId}','Preparing')">
+                        Preparing
                     </button>
 
-                    <button class="ready"
-                      onclick="updateStatus('${order.orderId}','Ready')">
-                      Ready
+                    <button
+                        class="ready"
+                        onclick="updateStatus('${order.orderId}','Ready')">
+                        Ready
                     </button>
 
-                    <button class="served"
-                      onclick="confirmServed('${order.orderId}')">
-                      Served
+                    <button
+                        class="served"
+                        onclick="confirmServed('${order.orderId}')">
+                        Served
                     </button>
+
                 </div>
 
             </div>
+
             `;
 
             container.appendChild(card);
+
         });
 
     }catch(err){
 
-        console.error(err);
+        console.error("Error loading orders:", err);
     }
-}
-
-function toggle(el){
-
-    const details =
-        el.nextElementSibling;
-
-    details.style.display =
-        details.style.display === "block"
-        ? "none"
-        : "block";
 }
 
 async function updateStatus(orderId,status){
 
-    await fetch(api,{
-        method:"POST",
-        mode:"no-cors",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            action:"updateStatus",
-            orderId:orderId,
-            status:status
-        })
-    });
+    try{
 
-    setTimeout(loadOrders,1000);
-}
+        await fetch(api,{
 
-async function confirmServed(orderId){
+            method:"POST",
 
-    const confirmed = confirm(
-        "Mark this order as SERVED?\n\nThis order will be removed from the pending orders list."
-    );
+            mode:"no-cors",
 
-    if(!confirmed){
-        return;
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+
+                action:"updateStatus",
+                orderId:orderId,
+                status:status
+
+            })
+
+        });
+
+        setTimeout(loadOrders,1000);
+
+    }catch(err){
+
+        console.error("Status update failed:", err);
     }
-
-    await updateStatus(orderId,"Served");
 }
+
+function confirmServed(orderId){
+
+    selectedOrderId = orderId;
+
+    document.getElementById("confirmModal")
+        .style.display = "flex";
+}
+
+function closeModal(){
+
+    document.getElementById("confirmModal")
+        .style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.getElementById("confirmYes")
+        .addEventListener("click", async () => {
+
+            await updateStatus(
+                selectedOrderId,
+                "Served"
+            );
+
+            closeModal();
+
+        });
+
+});
 
 loadOrders();
 
-setInterval(loadOrders,10000);
+/* Auto refresh every 3 seconds */
+
+setInterval(loadOrders,3000);
 
 </script>
-<div id="confirmModal" style="
-display:none;
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.7);
-justify-content:center;
-align-items:center;
-z-index:9999;
-">
 
-<div style="
-background:#222;
-padding:25px;
-border-radius:12px;
-width:90%;
-max-width:350px;
-text-align:center;
-">
-
-<h3>Confirm Order Served</h3>
-
-<p>
-This order will be removed from the pending list.
-</p>
-
-<button
-id="confirmYes"
-style="
-background:#2f9e44;
-color:white;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-margin-right:10px;
-">
-Yes
-</button>
-
-<button
-onclick="closeModal()"
-style="
-background:#666;
-color:white;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-">
-Cancel
-</button>
-
-</div>
-</div>
 </body>
 </html>
